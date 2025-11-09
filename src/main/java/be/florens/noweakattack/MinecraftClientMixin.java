@@ -21,15 +21,15 @@ public class MinecraftClientMixin {
 	@Shadow public HitResult crosshairTarget;
 	@Shadow public ClientPlayerInteractionManager interactionManager;
 
-	@Inject(method = "doAttack", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;attackEntity(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/entity/Entity;)V"))
+	// prevents attacking until cooldown is finished
+	@Inject(method = "doAttack", cancellable = true, at = @At("HEAD"))
 	private void cancelAttack(CallbackInfoReturnable<Boolean> info) {
 		if (!this.hasFinishedCooldown()) {
 			info.setReturnValue(false);
 		}
 	}
 
-	// Makes it so you can hold down the attack button to keep attack an entity
-	// Similar to how you hold down your attack button to keep mining a block
+	// Makes it so you can hold down the attack button to keep attack an entity while aiming and in range of one
 	@Inject(method = "handleBlockBreaking", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/hit/HitResult;getType()Lnet/minecraft/util/hit/HitResult$Type;"))
 	private void handleEntityAttacking(boolean bl, CallbackInfo info) {
 		if (bl && this.crosshairTarget != null && this.crosshairTarget.getType() == HitResult.Type.ENTITY && this.hasFinishedCooldown()) {
